@@ -3,14 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Aplicación</title>
+    <title>Registro de Producto</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Bienvenido a mi aplicación</h1>
-    <p>Consulta la base de datos:</p>
-    <button id="loadData">Cargar Datos</button>
-    <div id="data"></div>
+    <div>
+        <form class="form-container">
+            <div class="centrar">
+                <h1>Formulario de Producto</h1>
+            </div>
+            <div class="row">
+                <div class="column">
+                    <label for="codigo">Código</label>
+                    <input type="text" id="codigo" name="codigo" placeholder="Ingrese el código">
+                </div>
+                <div class="column">
+                    <label for="nombre">Nombre</label>
+                    <input type="text" id="nombre" name="nombre" placeholder="Ingrese el Nombre">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="column">
+                    <label>Bodega</label>
+                    <select id="bodega" class="selector_custom">
+                        <option value="">Seleccione...</option>
+                    </select>
+                </div>
+                <div class="column">
+                    <label>Sucursal</label>
+                    <select id="sucursal" class="selector_custom">
+                        <option value="">Seleccione...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="column">
+                    <label">Moneda</label>
+                    <select id="moneda" class="selector_custom">
+                        <option value="">Seleccione...</option>
+                    </select>
+                </div>
+                <div class="column">
+                    <label for="precio">Precio</label>
+                    <input type="text" id="precio" name="precio" placeholder="Ingrese el precio" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <label>Materiales</label>
+                <input type="checkbox" name="material" value="Plástico"> Plástico
+                <input type="checkbox" name="material" value="Metal"> Metal
+                <input type="checkbox" name="material" value="Madera"> Madera
+            </div>
+
+            <div class="row">
+                <label>Descripción</label>
+                <textarea id="descripcion"></textarea>
+            </div>
+
+            <div class="centrar">
+                <button type="submit" class="button">Guardar Producto</button>
+            </div>
+        </form>
+    </div>
 
     <script src="script.js"></script>
 </body>

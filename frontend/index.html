@@ -9,7 +9,7 @@
 <body>
     <div>
         <form class="form-container">
-            <div class="centrar">
+            <div class="centrar-unidad">
                 <h1>Formulario de Producto</h1>
             </div>
             <div class="row">
@@ -40,7 +40,7 @@
 
             <div class="row">
                 <div class="column">
-                    <label">Moneda</label>
+                    <label>Moneda</label>
                     <select id="moneda" class="selector_custom">
                         <option value="">Seleccione...</option>
                     </select>
@@ -52,18 +52,26 @@
             </div>
 
             <div class="row">
-                <label>Materiales</label>
-                <input type="checkbox" name="material" value="Plástico"> Plástico
-                <input type="checkbox" name="material" value="Metal"> Metal
-                <input type="checkbox" name="material" value="Madera"> Madera
+                <div class="column">
+                    <label>Materiales</label>
+                    <div class="checkbox-container">
+                        <div class="checkbox-item"><input type="checkbox" name="material" value="Plástico"> Plástico</div>
+                        <div class="checkbox-item"><input type="checkbox" name="material" value="Metal"> Metal</div>
+                        <div class="checkbox-item"><input type="checkbox" name="material" value="Madera"> Madera</div>
+                        <div class="checkbox-item"><input type="checkbox" name="material" value="Vidrio"> Vidrio</div>
+                        <div class="checkbox-item"><input type="checkbox" name="material" value="Textil"> Textil</div>                 
+                    </div>
+                </div>
             </div>
 
             <div class="row">
-                <label>Descripción</label>
-                <textarea id="descripcion"></textarea>
+                <div class="column">
+                    <label>Descripción</label>
+                    <textarea id="descripcion" class="area-texto"></textarea>
+                </div>
             </div>
 
-            <div class="centrar">
+            <div class="centrar-unidad">
                 <button type="submit" class="button">Guardar Producto</button>
             </div>
         </form>

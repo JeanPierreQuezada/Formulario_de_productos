@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:13
+    container_name: postgres_container
+    restart: always
+    env_file:
+      - ./backend/src/.env
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    container_name: php_backend
+    restart: always
+    ports:
+      - "8000:80"
+    depends_on:
+      - db
+    volumes:
+      - ./backend/src:/var/www/html
+
+  frontend:
+    image: nginx
+    container_name: frontend
+    restart: always
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:

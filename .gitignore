@@ -1,5 +1,4 @@
 # CakePHP 3
-
 /vendor/*
 /config/app.php
 
@@ -18,8 +17,50 @@
 !/logs/empty
 
 # CakePHP 2
-
 /app/tmp/*
 /app/Config/core.php
 /app/Config/database.php
 /vendors/*
+
+# Archivos y carpetas generadas por Composer
+backend/src/vendor/
+backend/src/composer.lock
+
+# Archivos de entorno
+backend/src/.env
+
+# Volúmenes y datos de Docker
+db_data/
+db/init.sql
+
+# Caché y logs de PHP
+backend/src/.phpunit.result.cache
+backend/src/storage/logs/
+backend/src/storage/framework/cache/
+backend/src/storage/framework/sessions/
+backend/src/storage/framework/views/
+
+# Logs y archivos temporales
+*.log
+*.cache
+*.DS_Store
+*.bak
+*.swp
+
+# Archivos de configuración de IDEs y editores de código
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos de Nginx temporales
+frontend/nginx/cache/
+frontend/nginx/tmp/
+
+# Contenedores y datos de Docker
+docker-compose.override.yml
+docker-compose.yml~
+
+# Configuraciones del sistema operativo
+Thumbs.db
+.DS_Store

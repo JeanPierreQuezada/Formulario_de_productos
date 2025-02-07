@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 $conn = getDBConnection();
 
 if (!isset($_GET["codigo"])) {
-    echo json_encode(["error" => "No se recibio el codigo"]);
+    echo json_encode(["error" => "No se recibió el código"]);
     exit;
 }
 
@@ -22,12 +22,12 @@ $codigo = trim($_GET["codigo"]);
 
 // Validación de formato
 if (!preg_match("/^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]+$/", $codigo)) {
-    echo json_encode(["error" => "Se permite letras y numeros, sin otros caracteres"]);
+    echo json_encode(["error" => "Se permite letras y numeros, sin otros caracteres."]);
     exit;
 }
 
 if (strlen($codigo) < 5 || strlen($codigo) > 15) {
-    echo json_encode(["error" => "Debe tener entre 5 y 15 caracteres"]);
+    echo json_encode(["error" => "Debe tener entre 5 y 15 caracteres."]);
     exit;
 }
 
@@ -38,7 +38,7 @@ try {
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($row["count"] > 0) {
-        echo json_encode(["unico" => false, "error" => "Este código ya está registrado"]);
+        echo json_encode(["unico" => false, "error" => "Este codigo ya está registrado."]);
     } else {
         echo json_encode(["unico" => true]);
     }

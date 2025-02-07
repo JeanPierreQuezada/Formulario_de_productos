@@ -12,6 +12,7 @@ $db   = $_ENV['POSTGRES_DB'];
 $user = $_ENV['POSTGRES_USER'];
 $pass = $_ENV['POSTGRES_PASSWORD'];
 
+/*
 try {
     $dsn = "pgsql:host=$host;dbname=$db";
     $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
@@ -19,4 +20,17 @@ try {
 } catch (PDOException $e) {
     echo "❌ Error en la conexión: " . $e->getMessage();
 }
+*/
+function getDBConnection() {
+    global $host, $db, $user, $pass;
+    
+    try {
+        $dsn = "pgsql:host=$host;dbname=$db";
+        $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        return $pdo;
+    } catch (PDOException $e) {
+        die(json_encode(["error" => "❌ Error en la conexión: " . $e->getMessage()]));
+    }
+}
+
 ?>

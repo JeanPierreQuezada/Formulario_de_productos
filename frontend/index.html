@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Producto</title>
     <link rel="stylesheet" href="styles.css">
+    <script type="module" src="script.js"></script>
 </head>
 <body>
     <div>
@@ -16,10 +17,12 @@
                 <div class="column">
                     <label for="codigo">Código</label>
                     <input type="text" id="codigo" name="codigo" placeholder="Ingrese el código">
+                    <p id="msg-codigo" class="error"></p>
                 </div>
                 <div class="column">
                     <label for="nombre">Nombre</label>
                     <input type="text" id="nombre" name="nombre" placeholder="Ingrese el Nombre">
+                    <p id="msg-nombre" class="error"></p>
                 </div>
             </div>
 
@@ -29,12 +32,14 @@
                     <select id="bodega" class="selector_custom">
                         <option value="">Seleccione...</option>
                     </select>
+                    <p id="msg-bodega" class="error"></p>
                 </div>
                 <div class="column">
                     <label>Sucursal</label>
                     <select id="sucursal" class="selector_custom">
                         <option value="">Seleccione...</option>
                     </select>
+                    <p id="msg-sucursal" class="error"></p>
                 </div>
             </div>
 
@@ -44,10 +49,12 @@
                     <select id="moneda" class="selector_custom">
                         <option value="">Seleccione...</option>
                     </select>
+                    <p id="msg-moneda" class="error"></p>
                 </div>
                 <div class="column">
                     <label for="precio">Precio</label>
-                    <input type="text" id="precio" name="precio" placeholder="Ingrese el precio" required>
+                    <input type="text" id="precio" name="precio" placeholder="Ingrese el precio">
+                    <p id="msg-precio" class="error"></p>
                 </div>
             </div>
 
@@ -61,6 +68,7 @@
                         <div class="checkbox-item"><input type="checkbox" name="material" value="Vidrio"> Vidrio</div>
                         <div class="checkbox-item"><input type="checkbox" name="material" value="Textil"> Textil</div>                 
                     </div>
+                    <p id="msg-materiales" class="error"></p>
                 </div>
             </div>
 
@@ -68,11 +76,12 @@
                 <div class="column">
                     <label>Descripción</label>
                     <textarea id="descripcion" class="area-texto"></textarea>
+                    <p id="msg-descripcion" class="error"></p>
                 </div>
             </div>
 
             <div class="centrar-unidad">
-                <button type="submit" class="button">Guardar Producto</button>
+                <button type="submit" class="button" id="guardar">Guardar Producto</button>
             </div>
         </form>
     </div>

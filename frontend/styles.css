@@ -63,6 +63,7 @@ input {
     border-radius: 5px;
     resize: vertical;
     overflow-y: auto;
+    outline: none;
 }
 
 .centrar-unidad{

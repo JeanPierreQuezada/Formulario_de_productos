@@ -13,36 +13,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $conn = getDBConnection();
 
-if (!isset($_GET["codigo"])) {
+if (!isset($_GET["descripcion"])) {
     echo json_encode(["error" => "No se recibió el código"]);
     exit;
 }
 
-$codigo = trim($_GET["codigo"]);
+$descripcion = trim($_GET["descripcion"]);
 
 // Validación de formato
-if (!preg_match("/^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]+$/", $codigo)) {
-    echo json_encode(["error" => "Se permite letras y numeros, sin otros caracteres."]);
+if (!preg_match("/^.{10,1000}$/", $descripcion)) {
+    echo json_encode(["error" => "Se permiten entre 10 a 1000 caracteres"]);
     exit;
 }
 
-if (strlen($codigo) < 5 || strlen($codigo) > 15) {
-    echo json_encode(["error" => "Debe tener entre 5 y 15 caracteres."]);
-    exit;
-}
-
-// Validación en la base de datos
-try {
-    $stmt = $conn->prepare("SELECT COUNT(*) AS count FROM productos WHERE codigo = ?");
-    $stmt->execute([$codigo]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($row["count"] > 0) {
-        echo json_encode(["unico" => false, "error" => "Este codigo ya está registrado."]);
-    } else {
-        echo json_encode(["unico" => true]);
-    }
-} catch (PDOException $e) {
-    echo json_encode(["error" => "Error en la consulta: " . $e->getMessage()]);
-}
+echo json_encode(["estado" => true, "valor" => $descripcion]);
 ?>

@@ -4,9 +4,18 @@ import CONFIG from './config.js';
 document.addEventListener("DOMContentLoaded", function () {
     const inputCodigo = document.getElementById("codigo");
     const inputNombre = document.getElementById("nombre");
+    const inputPrecio = document.getElementById("precio");
+    const inputDescripcion = document.getElementById("descripcion");
+
     const errorMsg = document.getElementById("msg-codigo");
     const errorMsgNombre = document.getElementById("msg-nombre");
+    const errorMsgPrecio = document.getElementById("msg-precio");
+    const errorMsgDescripcion = document.getElementById("msg-descripcion");
+    const errorMsgMaterial = document.getElementById("msg-materiales");
+
     const botonGuardar = document.getElementById("guardar");
+
+    let valorTest;
 
     // Listener Código
     inputCodigo.addEventListener("focus", function () {
@@ -26,13 +35,47 @@ document.addEventListener("DOMContentLoaded", function () {
         validarNombre();
     });
 
+    // Listener Precio
+    inputPrecio.addEventListener("focus", function () {
+        validarPrecio();
+    });
+
+    inputPrecio.addEventListener("input", function () {
+        validarPrecio();
+    });
+
+    // Listener Descripción
+    inputDescripcion.addEventListener("focus", function () {
+        validarDescripcion();
+    });
+
+    inputDescripcion.addEventListener("input", function () {
+        validarDescripcion();
+    });
+
     // Listener Enviar
-    botonGuardar.addEventListener("click", function (event) {
+    botonGuardar.addEventListener("click", async function (event) {
         event.preventDefault();
-        if (validarCodigo()) {
-            // Envío al backend
-            validarCodigoBackend(inputCodigo.value);
-            validarNombreBackend(inputNombre.value)
+        let checkboxes = document.querySelectorAll('input[name="material"]:checked');
+        let valores = Array.from(checkboxes).map(checkbox => checkbox.value);
+
+        if (!validarMateriales(valores)) {
+            console.error("Error: Debes seleccionar al menos dos materiales.");
+            return;
+        }
+
+        try {
+            await Promise.all([
+                valorTest = validarCodigoBackend(inputCodigo.value),
+                validarNombreBackend(inputNombre.value),
+                validarPrecioBackend(inputPrecio.value),
+                validarDescripcionBackend(inputDescripcion.value),
+                validarMaterialesBackend(valores)
+            ]);
+    
+            console.log("Todas las validaciones se completaron correctamente.");
+        } catch (error) {
+            console.error("Error en una o más validaciones:", error);
         }
     });
 
@@ -54,19 +97,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (valor.length === 0) {
             errorMsg.textContent = "El código del producto no puede estar en blanco";
-            aplicarEstilo(false);
+            aplicarEstilo(false,inputCodigo);
             return false;
         } else if (!regex.test(valor)) {
             errorMsg.textContent = "El código del producto solo debe contener letras y números";
-            aplicarEstilo(false);
+            aplicarEstilo(false,inputCodigo);
             return false;
         } else if (valor.length < 5 || valor.length > 15) {
             errorMsg.textContent = "El código del producto debe tener entre 5 y 15 caracteres";
-            aplicarEstilo(false);
+            aplicarEstilo(false,inputCodigo);
             return false;
         } else {
             errorMsg.textContent = "";
-            aplicarEstilo(true);
+            aplicarEstilo(true,inputCodigo);
             return true;
         }
     }
@@ -91,7 +134,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 aplicarEstilo(false,inputCodigo);
             } else {
                 errorMsg.textContent = "";
+                console.log(data)
                 aplicarEstilo(true,inputCodigo);
+                return data.estado;
             }
         })
         .catch(error => {
@@ -99,7 +144,10 @@ document.addEventListener("DOMContentLoaded", function () {
             errorMsg.textContent = "Error al validar. Intenta de nuevo.";
             aplicarEstilo(false);
         });
+        console.log(valorTest);
     }
+
+    console.log(valorTest);
 
     // Nombre
     function validarNombre() {
@@ -108,19 +156,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (valor.length === 0) {
             errorMsgNombre.textContent = "El nombre del producto no puede estar en blanco";
-            aplicarEstilo(false);
+            aplicarEstilo(false,inputNombre);
             return false;
         } else if (!regex.test(valor)) {
             errorMsgNombre.textContent = "El nombre del producto solo debe contener letras.";
-            aplicarEstilo(false);
+            aplicarEstilo(false,inputNombre);
             return false;
         } else if (valor.length < 2 || valor.length > 50) {
             errorMsgNombre.textContent = "El nombre del producto debe tener entre 5 y 50 caracteres";
-            aplicarEstilo(false);
+            aplicarEstilo(false,inputNombre);
             return false;
         } else {
             errorMsgNombre.textContent = "";
-            aplicarEstilo(true);
+            aplicarEstilo(true,inputNombre);
             return true;
         }
     }
@@ -140,6 +188,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             } else {
                 errorMsgNombre.textContent = "";
+                console.log(data.estado)
                 aplicarEstilo(true,inputNombre);
             }
         })
@@ -150,205 +199,129 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // Precio
+    function validarPrecio() {
+        const valor = inputPrecio.value.trim();
+        const regex = /^\d+(\.\d{1,2})?$/;
 
-});
-
-
-
-/*
-console.log(valor.length)
-document.addEventListener("DOMContentLoaded", function () {
-    const form = document.querySelector(".form-container");
-    const codigoInput = document.getElementById("codigo");
-    const nombreInput = document.getElementById("nombre");
-    const precioInput = document.getElementById("precio");
-    const bodegaSelect = document.getElementById("bodega");
-    const sucursalSelect = document.getElementById("sucursal");
-    const monedaSelect = document.getElementById("moneda");
-    const descripcionTextarea = document.getElementById("descripcion");
-    const materialesCheckboxes = document.querySelectorAll('input[name="material"]');
-
-    form.addEventListener("submit", function (event) {
-        event.preventDefault(); // Evitar el envío si hay errores
-
-        let errores = [];
-
-        // Validación del Código del Producto
-        let codigoValue = codigoInput.value.trim();
-        let regexCodigo = /^(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9]{5,15}$/;
-        if (codigoValue === "") {
-            errores.push("El código del producto no puede estar en blanco.");
-        } else if (!regexCodigo.test(codigoValue)) {
-            errores.push("El código del producto debe contener letras y números y tener entre 5 y 15 caracteres.");
+        if (valor.length === 0) {
+            errorMsgPrecio.textContent = "El precio del producto no debe quedar en blanco";
+            aplicarEstilo(false,inputPrecio);
+            return false;
+        } else if (!regex.test(valor)) {
+            errorMsgPrecio.textContent = "Sólo números positivos con hasta dos decimales";
+            aplicarEstilo(false,inputPrecio);
+            return false;
         } else {
-            // Validar unicidad en la base de datos (se requiere una petición AJAX)
-            validarCodigoUnico(codigoValue, function (esUnico) {
-                if (!esUnico) {
-                    errores.push("El código del producto ya está registrado.");
-                    mostrarErrores(errores);
-                }
-            });
+            errorMsgPrecio.textContent = "";
+            aplicarEstilo(true,inputPrecio);
+            return true;
         }
-
-        // Validación del Nombre del Producto
-        let nombreValue = nombreInput.value.trim();
-        if (nombreValue === "") {
-            errores.push("El nombre del producto no puede estar en blanco.");
-        } else if (nombreValue.length < 2 || nombreValue.length > 50) {
-            errores.push("El nombre del producto debe tener entre 2 y 50 caracteres.");
-        }
-
-        // Validación del Precio
-        let precioValue = precioInput.value.trim();
-        let regexPrecio = /^[0-9]+(\.[0-9]{1,2})?$/;
-        if (precioValue === "") {
-            errores.push("El precio del producto no puede estar en blanco.");
-        } else if (!regexPrecio.test(precioValue) || parseFloat(precioValue) <= 0) {
-            errores.push("El precio del producto debe ser un número positivo con hasta dos decimales.");
-        }
-
-        // Validación de Materiales (mínimo 2 seleccionados)
-        let materialesSeleccionados = Array.from(materialesCheckboxes).filter(chk => chk.checked);
-        if (materialesSeleccionados.length < 2) {
-            errores.push("Debe seleccionar al menos dos materiales para el producto.");
-        }
-
-        // Validación de Bodega (selección obligatoria)
-        if (bodegaSelect.value === "") {
-            errores.push("Debe seleccionar una bodega.");
-        }
-
-        // Validación de Sucursal (selección obligatoria)
-        if (sucursalSelect.value === "") {
-            errores.push("Debe seleccionar una sucursal para la bodega seleccionada.");
-        }
-
-        // Validación de Moneda (selección obligatoria)
-        if (monedaSelect.value === "") {
-            errores.push("Debe seleccionar una moneda para el producto.");
-        }
-
-        // Validación de Descripción
-        let descripcionValue = descripcionTextarea.value.trim();
-        if (descripcionValue === "") {
-            errores.push("La descripción del producto no puede estar en blanco.");
-        } else if (descripcionValue.length < 10 || descripcionValue.length > 1000) {
-            errores.push("La descripción del producto debe tener entre 10 y 1000 caracteres.");
-        }
-
-        // Mostrar errores si existen
-        if (errores.length > 0) {
-            mostrarErrores(errores);
-            return;
-        }
-
-        // Si no hay errores, se puede proceder con el envío del formulario
-        enviarFormulario();
-    });
-
-    function mostrarErrores(errores) {
-        alert(errores.join("\n"));
     }
 
-    function validarCodigoUnico(codigo, callback) {
-        // Simulación de validación AJAX en la base de datos
-        // Reemplazar esto con una llamada real a PHP usando fetch/AJAX
-        fetch("validar_codigo.php?codigo=" + encodeURIComponent(codigo))
-            .then(response => response.json())
-            .then(data => {
-                callback(data.unico);
-            })
-            .catch(error => {
-                console.error("Error en la validación del código:", error);
-                callback(true);
-            });
-    }
-
-    function enviarFormulario() {
-        alert("Formulario válido. Procediendo con el envío...");
-        form.submit();
-    }
-});
-
-
-// Carga de valores desde DB
-document.addEventListener("DOMContentLoaded", function () {
-    cargarBodegas();
-    cargarMonedas();
-
-    document.getElementById("bodega").addEventListener("change", cargarSucursales);
-    document.getElementById("productForm").addEventListener("submit", validarFormulario);
-});
-
-function cargarBodegas() {
-    fetch("http://localhost:8000/api/get_bodegas.php")
-        .then(response => response.json())
-        .then(data => {
-            let select = document.getElementById("bodega");
-            data.forEach(bodega => {
-                let option = document.createElement("option");
-                option.value = bodega.id;
-                option.textContent = bodega.nombre;
-                select.appendChild(option);
-            });
-        });
-}
-
-function cargarMonedas() {
-    fetch("http://localhost:8000/api/get_monedas.php")
-        .then(response => response.json())
-        .then(data => {
-            let select = document.getElementById("moneda");
-            data.forEach(moneda => {
-                let option = document.createElement("option");
-                option.value = moneda.id;
-                option.textContent = moneda.nombre;
-                select.appendChild(option);
-            });
-        });
-}
-
-function cargarSucursales() {
-    let bodegaId = document.getElementById("bodega").value;
-    fetch(`http://localhost:8000/api/get_sucursales.php?bodega_id=${bodegaId}`)
-        .then(response => response.json())
-        .then(data => {
-            let select = document.getElementById("sucursal");
-            select.innerHTML = '<option value="">Seleccione...</option>';
-            data.forEach(sucursal => {
-                let option = document.createElement("option");
-                option.value = sucursal.id;
-                option.textContent = sucursal.nombre;
-                select.appendChild(option);
-            });
-        });
-}
-
-function validarFormulario(event) {
-    event.preventDefault();
-    let codigo = document.getElementById("codigo").value;
-    
-    fetch(`http://localhost:8000/api/validar_codigo.php?codigo=${codigo}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.exists) {
-                alert("El código del producto ya está registrado.");
-            } else {
-                guardarProducto();
+    function validarPrecioBackend(nombre) {
+        fetch(`${CONFIG.API_BASE_URL}validar_precio.php?precio=` + encodeURIComponent(nombre))
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Error en la respuesta del servidor: " + response.status);
             }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                errorMsgPrecio.textContent = data.error;
+                aplicarEstilo(false,inputPrecio);
+                return;
+            } else {
+                errorMsgPrecio.textContent = "";
+                aplicarEstilo(true,inputPrecio);
+            }
+        })
+        .catch(error => {
+            console.error("Error en la validación del nombre:", error);
+            errorMsgPrecio.textContent = "Error al validar. Intenta de nuevo.";
+            aplicarEstilo(false,inputPrecio);
         });
-}
+    }
 
-function guardarProducto() {
-    let formData = new FormData(document.getElementById("productForm"));
+    // Descripción
+    function validarDescripcion() {
+        const valor = inputDescripcion.value.trim();
+        const regex = /^.{10,1000}$/;
 
-    fetch("http://localhost:8000/api/save_producto.php", {
-        method: "POST",
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        alert(data.message);
-    });
-}
-    */
+        if (valor.length === 0) {
+            errorMsgDescripcion.textContent = "La descripcion del producto no debe quedar en blanco";
+            aplicarEstilo(false,inputDescripcion);
+            return false;
+        } else if (!regex.test(valor)) {
+            errorMsgDescripcion.textContent = "Se permiten entre 10 a 1000 caracteres";
+            aplicarEstilo(false,inputDescripcion);
+            return false;
+        } else {
+            errorMsgDescripcion.textContent = "";
+            aplicarEstilo(true,inputDescripcion);
+            return true;
+        }
+    }
+
+    function validarDescripcionBackend(nombre) {
+        fetch(`${CONFIG.API_BASE_URL}validar_descripcion.php?descripcion=` + encodeURIComponent(nombre))
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Error en la respuesta del servidor: " + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                errorMsgDescripcion.textContent = data.error;
+                aplicarEstilo(false,inputDescripcion);
+                return;
+            } else {
+                errorMsgDescripcion.textContent = "";
+                aplicarEstilo(true,inputDescripcion);
+            }
+        })
+        .catch(error => {
+            console.error("Error en la validación del nombre:", error);
+            errorMsgDescripcion.textContent = "Error al validar. Intenta de nuevo.";
+            aplicarEstilo(false,inputDescripcion);
+        });
+    }
+
+    // Materiales
+    function validarMateriales(valores) {
+        console.log(valores)
+        if (valores.length < 2) {
+            errorMsgMaterial.textContent = "Debes seleccionar al menos dos materiales.";
+            return false;
+        } else {
+            errorMsgMaterial.textContent = "";
+            return valores;
+        }
+    }
+
+    function validarMaterialesBackend(valores) {
+        fetch(`${CONFIG.API_BASE_URL}validar_descripcion.php?descripcion=` + encodeURIComponent(nombre))
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Error en la respuesta del servidor: " + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                errorMsgDescripcion.textContent = data.error;
+                return;
+            } else {
+                errorMsgDescripcion.textContent = "";
+                return data.valor;
+            }
+        })
+        .catch(error => {
+            console.error("Error en la validación del nombre:", error);
+            errorMsgDescripcion.textContent = "Error al validar. Intenta de nuevo.";
+            aplicarEstilo(false,inputDescripcion);
+        });
+    }
+});

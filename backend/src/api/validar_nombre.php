@@ -35,4 +35,6 @@ if (strlen($nombre) < 2 || strlen($nombre) > 50) {
     echo json_encode(["error" => "Debe tener entre 2 y 50 caracteres"]);
     exit;
 }
+
+echo json_encode(["estado" => true, "valor" => $nombre]);
 ?>

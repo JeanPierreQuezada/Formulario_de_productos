@@ -13,23 +13,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $conn = getDBConnection();
 
-if (!isset($_GET["precio"])) {
+// Validar si los parámetros fueron enviados
+if (!isset($_GET["materiales"])) {
     echo json_encode(["error" => "No se recibio el codigo"]);
     exit;
 }
 
-$precio = trim($_GET["precio"]);
+$materiales = explode(',', $_GET["materiales"]); // Convertir la cadena en un array
 
-// Validación de formato
-if (strlen($precio) === 0) {
-    echo json_encode(["error" => "Este campo no debe quedar en blanco"]);
+// Validación de Materiales
+if (count($materiales) < 2) {
+    echo json_encode(["error" => "Debes seleccionar al menos dos materiales."]);
     exit;
 }
 
-if (!preg_match("/^\d+(\.\d{1,2})?$/", $precio)) {
-    echo json_encode(["error" => "Solo se permiten nros positivo con hasta dos decimales"]);
-    exit;
-}
-
-echo json_encode(["estado" => true, "valor" => $precio]);
+echo json_encode(["estado" => true, "valor" => $materiales]);
 ?>

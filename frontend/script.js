@@ -13,9 +13,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const errorMsgDescripcion = document.getElementById("msg-descripcion");
     const errorMsgMaterial = document.getElementById("msg-materiales");
 
+    const errorMsgBodega = document.getElementById("msg-bodega");
+    const errorMsgSucursal = document.getElementById("msg-sucursal");
+    const errorMsgMoneda = document.getElementById("msg-moneda");
+
     const botonGuardar = document.getElementById("guardar");
 
-    let valorTest;
+    // DB - Back
+    const bodegaSelect = document.getElementById("bodega");
+    const sucursalSelect = document.getElementById("sucursal");
+    const monedaSelect = document.getElementById("moneda");
 
     // Listener Código
     inputCodigo.addEventListener("focus", function () {
@@ -53,31 +60,41 @@ document.addEventListener("DOMContentLoaded", function () {
         validarDescripcion();
     });
 
-    // Listener Enviar
-    botonGuardar.addEventListener("click", async function (event) {
-        event.preventDefault();
-        let checkboxes = document.querySelectorAll('input[name="material"]:checked');
-        let valores = Array.from(checkboxes).map(checkbox => checkbox.value);
-
-        if (!validarMateriales(valores)) {
-            console.error("Error: Debes seleccionar al menos dos materiales.");
-            return;
-        }
-
-        try {
-            await Promise.all([
-                valorTest = validarCodigoBackend(inputCodigo.value),
-                validarNombreBackend(inputNombre.value),
-                validarPrecioBackend(inputPrecio.value),
-                validarDescripcionBackend(inputDescripcion.value),
-                validarMaterialesBackend(valores)
-            ]);
-    
-            console.log("Todas las validaciones se completaron correctamente.");
-        } catch (error) {
-            console.error("Error en una o más validaciones:", error);
-        }
+    // Listener Selector Bodega
+    bodegaSelect.addEventListener("focus", function () {
+        validarBodega();
     });
+
+    // Listener Selector Sucursal
+    sucursalSelect.addEventListener("focus", function () {
+        validarSucursal();
+    });
+
+    // Listener Selector Moneda
+    monedaSelect.addEventListener("focus", function () {
+        validarMoneda();
+    });
+        
+
+    // Listener Selector Sucursal
+    bodegaSelect.addEventListener("focus", function () {
+        validarSucursal();
+    });
+
+    // Listener Selector Moneda
+    bodegaSelect.addEventListener("focus", function () {
+        validarBodega();
+    });
+
+    // Función para mostrar u ocultar el indicador de carga
+    function mostrarLoading(mostrar) {
+        const loadingIndicator = document.getElementById("guardar");
+        if (mostrar) {
+            loadingIndicator.textContent = "Cargando ...";
+        } else {
+            loadingIndicator.textContent = "Guardar Producto";
+        }
+    }
 
     // Personalización de estilo por errores
     function aplicarEstilo(esValido,name) {
@@ -134,9 +151,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 aplicarEstilo(false,inputCodigo);
             } else {
                 errorMsg.textContent = "";
-                console.log(data)
+                console.log(data.unico)
                 aplicarEstilo(true,inputCodigo);
-                return data.estado;
+                return data.unico;
             }
         })
         .catch(error => {
@@ -144,10 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
             errorMsg.textContent = "Error al validar. Intenta de nuevo.";
             aplicarEstilo(false);
         });
-        console.log(valorTest);
     }
-
-    console.log(valorTest);
 
     // Nombre
     function validarNombre() {
@@ -188,8 +202,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             } else {
                 errorMsgNombre.textContent = "";
-                console.log(data.estado)
+                console.log(data.estado);
                 aplicarEstilo(true,inputNombre);
+                return data.estado;
             }
         })
         .catch(error => {
@@ -234,7 +249,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             } else {
                 errorMsgPrecio.textContent = "";
+                console.log(data.estado);
                 aplicarEstilo(true,inputPrecio);
+                return data.estado;
             }
         })
         .catch(error => {
@@ -279,7 +296,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             } else {
                 errorMsgDescripcion.textContent = "";
+                console.log(data.estado);
                 aplicarEstilo(true,inputDescripcion);
+                return data.estado;
             }
         })
         .catch(error => {
@@ -291,7 +310,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Materiales
     function validarMateriales(valores) {
-        console.log(valores)
+        //console.log(valores)
         if (valores.length < 2) {
             errorMsgMaterial.textContent = "Debes seleccionar al menos dos materiales.";
             return false;
@@ -301,8 +320,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    function validarMaterialesBackend(valores) {
-        fetch(`${CONFIG.API_BASE_URL}validar_descripcion.php?descripcion=` + encodeURIComponent(nombre))
+    function validarMaterialesBackend(nombre) {
+        fetch(`${CONFIG.API_BASE_URL}validar_materiales.php?materiales=` + encodeURIComponent(nombre))
         .then(response => {
             if (!response.ok) {
                 throw new Error("Error en la respuesta del servidor: " + response.status);
@@ -311,17 +330,146 @@ document.addEventListener("DOMContentLoaded", function () {
         })
         .then(data => {
             if (data.error) {
-                errorMsgDescripcion.textContent = data.error;
+                errorMsgMaterial.textContent = data.error;
                 return;
             } else {
-                errorMsgDescripcion.textContent = "";
+                errorMsgMaterial.textContent = "";
+                console.log(data.estado);
                 return data.valor;
             }
         })
         .catch(error => {
             console.error("Error en la validación del nombre:", error);
-            errorMsgDescripcion.textContent = "Error al validar. Intenta de nuevo.";
+            errorMsgMaterial.textContent = "Error al validar. Intenta de nuevo.";
             aplicarEstilo(false,inputDescripcion);
         });
     }
+
+    // Bodega
+    function validarBodega() {
+        console.log(bodegaSelect)
+        if (bodegaSelect.value === "") {
+            errorMsgBodega.textContent = "Debes seleccionar una bodega.";
+            aplicarEstilo(false,errorMsgBodega);
+            return false
+        } else {
+            errorMsgBodega.textContent = "";
+            aplicarEstilo(false,errorMsgBodega);
+            return true;
+        }
+    }
+
+    function validarBodegaBackend() {
+        fetch(`${CONFIG.API_BASE_URL}get_bodegas.php`)
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(bodega => {
+                let option = new Option(bodega.nombre, bodega.id);
+                bodegaSelect.add(option);
+            });
+        })
+        .catch(error => console.error("Error cargando bodegas:", error));
+    }
+
+    
+
+    // Sucursal ---------------
+    function validarSucursal() {
+        console.log(sucursalSelect)
+        if (bodegaSelect.value === "") {
+            errorMsgBodega.textContent = "Debes seleccionar una bodega.";
+            aplicarEstilo(false,errorMsgBodega);
+            return false;
+        } else {
+            errorMsgBodega.textContent = "";
+            aplicarEstilo(false,errorMsgBodega);
+            return true;
+        }
+    }
+
+    // Moneda
+    function validarMoneda() {
+        console.log(monedaSelect)
+        if (monedaSelect.value === "") {
+            errorMsgMoneda.textContent = "Debe seleccionar una moneda.";
+            aplicarEstilo(false,errorMsgMoneda);
+            return false
+        } else {
+            errorMsgMoneda.textContent = "";
+            aplicarEstilo(false,errorMsgMoneda);
+            return true;
+        }
+    }
+
+    function validarMonedasBackend() {    
+        fetch(`${CONFIG.API_BASE_URL}get_monedas.php`)
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(moneda => {
+                let option = new Option(moneda.nombre, moneda.id);
+                monedaSelect.add(option);
+            });
+        })
+        .catch(error => console.error("Error cargando monedas:", error));
+    }
+
+    // Cargar Sucursales
+    bodegaSelect.addEventListener("change", function () {
+        sucursalSelect.innerHTML = '<option value="">Seleccione...</option>';
+        if (this.value) {
+            fetch(`sucursales.php?bodega_id=${this.value}`)
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(sucursal => {
+                        let option = new Option(sucursal.nombre, sucursal.id);
+                        sucursalSelect.add(option);
+                    });
+                })
+                .catch(error => console.error("Error cargando sucursales:", error));
+        }
+    });
+
+    // Listener Enviar
+    botonGuardar.addEventListener("click", async function (event) {
+        event.preventDefault();
+        let checkboxes = document.querySelectorAll('input[name="material"]:checked');
+        let valores = Array.from(checkboxes).map(checkbox => checkbox.value);
+
+        if (!validarMateriales(valores)) {
+            console.error("Error: Debes seleccionar al menos dos materiales");
+            //return;
+        }
+
+        else if (validarBodega() === false) {
+            console.error("Error: Debes seleccionar aluna bodega");
+            return;
+        }
+
+        mostrarLoading(true);
+
+        try {
+            let resultados = await Promise.all([
+                validarCodigoBackend(inputCodigo.value),
+                validarNombreBackend(inputNombre.value),
+                validarPrecioBackend(inputPrecio.value),
+                validarDescripcionBackend(inputDescripcion.value),
+                validarMaterialesBackend(valores)
+            ]);
+
+            if (resultados.includes(null) || resultados.includes(false)) {
+                console.error("Error: Una o más validaciones han fallado.");
+                mostrarLoading(false); // Ocultar loader si hay errores
+                return;
+            }
+    
+            console.log("Enviar todas las nuevas variables");
+
+            //await enviarDatosBackend(inputCodigo.value, inputNombre.value, inputPrecio.value, inputDescripcion.value, valores);
+
+        } catch (error) {
+            console.error("Error en una o más validaciones:", error);
+        } finally {
+            mostrarLoading(false);
+        }
+    });
 });

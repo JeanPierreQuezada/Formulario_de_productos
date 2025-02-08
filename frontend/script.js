@@ -26,68 +26,53 @@ document.addEventListener("DOMContentLoaded", function () {
     let bodegaSeleccionada = "";
     let sucursalSeleccionada = "";
     let monedaSeleccionada = "";
+    let timeoutId;
+
+    let checkboxes = document.querySelectorAll('input[name="material"]');
 
     // Listener Código
-    inputCodigo.addEventListener("focus", function () {
-        validarCodigo();
-    });
-
     inputCodigo.addEventListener("input", function () {
-        validarCodigo();
+        clearTimeout(timeoutId);
+
+        if (validarCodigo()) {
+            timeoutId = setTimeout(() => {
+                validarCodigoBackend(inputCodigo.value.trim());
+            }, 4000);
+        }
     });
 
     // Listener Nombre
-    inputNombre.addEventListener("focus", function () {
-        validarNombre();
-    });
-
     inputNombre.addEventListener("input", function () {
-        validarNombre();
+        clearTimeout(timeoutId);
+
+        if (validarNombre()) {
+            timeoutId = setTimeout(() => {
+                validarNombreBackend(inputNombre.value.trim());
+            }, 4000);
+        }
     });
 
     // Listener Precio
-    inputPrecio.addEventListener("focus", function () {
-        validarPrecio();
-    });
-
     inputPrecio.addEventListener("input", function () {
-        validarPrecio();
+        clearTimeout(timeoutId);
+
+        if (validarPrecio()) {
+            timeoutId = setTimeout(() => {
+                validarPrecioBackend(inputPrecio.value.trim());
+            }, 4000);
+        }
     });
 
     // Listener Descripción
-    inputDescripcion.addEventListener("focus", function () {
-        validarDescripcion();
-    });
-
     inputDescripcion.addEventListener("input", function () {
-        validarDescripcion();
-    });
+        clearTimeout(timeoutId);
 
-    // Listener Selector Bodega
-    bodegaSelect.addEventListener("focus", function () {
-        validarBodega();
-    });
-
-    // Listener Selector Sucursal
-    sucursalSelect.addEventListener("focus", function () {
-        validarSucursal();
-    });
-
-    // Listener Selector Moneda
-    monedaSelect.addEventListener("focus", function () {
-        validarMoneda();
-    });
-        
-
-    // Listener Selector Sucursal
-    bodegaSelect.addEventListener("focus", function () {
-        validarSucursal();
-    });
-
-    // Listener Selector Moneda
-    bodegaSelect.addEventListener("focus", function () {
-        validarBodega();
-    });
+        if (validarDescripcion()) {
+            timeoutId = setTimeout(() => {
+                validarDescripcionBackend(inputDescripcion.value.trim());
+            }, 4000);
+        }
+    }); 
 
     // Función para mostrar u ocultar el indicador de carga
     function mostrarLoading(mostrar) {
@@ -312,15 +297,24 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Materiales
-    function validarMateriales(valores) {
+    function obtenerValoresSeleccionados() {
+        let seleccionados = Array.from(checkboxes)
+            .filter(checkbox => checkbox.checked)
+            .map(checkbox => checkbox.value);
+
+        return seleccionados.length > 0 ? seleccionados : [];
+    }
+
+    function validarMateriales() {
+        let valores = obtenerValoresSeleccionados();
         //console.log(valores)
         if (valores.length < 2) {
             errorMsgMaterial.textContent = "Debes seleccionar al menos dos materiales.";
             return false;
         } else {
             errorMsgMaterial.textContent = "";
-            return valores;
         }
+        return valores;
     }
 
     function validarMaterialesBackend(nombre) {
@@ -334,11 +328,11 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(data => {
             if (data.error) {
                 errorMsgMaterial.textContent = data.error;
-                return;
+                return false;
             } else {
                 errorMsgMaterial.textContent = "";
                 console.log(data.estado);
-                return data.valor;
+                return true;
             }
         })
         .catch(error => {
@@ -348,19 +342,18 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Bodega
-    function validarBodega() {
-        if (bodegaSelect.value === "") {
-            errorMsgBodega.textContent = "Debes seleccionar una bodega.";
-            aplicarEstilo(false,errorMsgBodega);
-            return false
-        } else {
-            errorMsgBodega.textContent = "";
-            aplicarEstilo(false,errorMsgBodega);
-            return true;
-        }
-    }
+    // Listener Materiales
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener("change", () => {
+            let valores = validarMateriales();
+            console.log("Materiales seleccionados:", valores);
+            if (valores.length > 0) {
+                validarMaterialesBackend(valores.join(','));
+            }
+        });
+    });
 
+    // Bodega
     function cargarBodegas() {
         fetch(`${CONFIG.API_BASE_URL}get_bodegas.php`)
             .then(response => {
@@ -384,32 +377,23 @@ document.addEventListener("DOMContentLoaded", function () {
             .catch(error => console.error("Error:", error));
     }
 
+    // Listener Selector Bodega
     bodegaSelect.addEventListener("change", function () {
         bodegaSeleccionada = bodegaSelect.value;
 
         if (bodegaSeleccionada) {
             console.log("Bodega seleccionada:", bodegaSeleccionada);
             cargarSucursales(bodegaSeleccionada);
+            errorMsgBodega.textContent = "";
+            aplicarEstilo(true,bodegaSelect);
         } else {
-            console.warn("Debe seleccionar una bodega válida.");
-            selectSucursal.innerHTML = '<option value="">Seleccione una opción</option>';
-            selectSucursal.disabled = true;
+            errorMsgBodega.textContent = "Debes seleccionar una bodega.";
+            aplicarEstilo(false,bodegaSelect);
+            sucursalSelect.disabled = true;
         }
     });
 
     // Sucursal
-    function validarSucursal() {
-        if (bodegaSelect.value === "") {
-            errorMsgBodega.textContent = "Debes seleccionar una bodega.";
-            aplicarEstilo(false,errorMsgBodega);
-            return false;
-        } else {
-            errorMsgBodega.textContent = "";
-            aplicarEstilo(false,errorMsgBodega);
-            return true;
-        }
-    }
-
     function cargarSucursales(bodegaId){
         fetch(`${CONFIG.API_BASE_URL}get_sucursales.php?bodega_id=${bodegaId}`)
             .then(response => {
@@ -437,25 +421,22 @@ document.addEventListener("DOMContentLoaded", function () {
             .catch(error => console.error("Error:", error));
     }
 
+    // Listener Selector Sucursal
     sucursalSelect.addEventListener("change", function () {
         sucursalSeleccionada = sucursalSelect.value;
-        console.log("Sucursal seleccionada:", sucursalSeleccionada);
+
+        if (sucursalSeleccionada) {
+            console.log("Sucursal seleccionada:", sucursalSeleccionada);
+            errorMsgSucursal.textContent = "";
+            aplicarEstilo(true,sucursalSelect);
+        } else {
+            errorMsgSucursal.textContent = "Debes seleccionar una sucursal.";
+            aplicarEstilo(false,sucursalSelect);
+        }
     });
 
 
     // Moneda
-    function validarMoneda() {
-        if (monedaSelect.value === "") {
-            errorMsgMoneda.textContent = "Debe seleccionar una moneda.";
-            aplicarEstilo(false,errorMsgMoneda);
-            return false
-        } else {
-            errorMsgMoneda.textContent = "";
-            aplicarEstilo(false,errorMsgMoneda);
-            return true;
-        }
-    }
-
     function cargarMonedas() {    
         fetch(`${CONFIG.API_BASE_URL}get_monedas.php`)
         .then(response => {
@@ -479,12 +460,24 @@ document.addEventListener("DOMContentLoaded", function () {
             .catch(error => console.error("Error:", error));
     }
 
+    // Listener Selector Moneda
     monedaSelect.addEventListener("change", function () {
-        monedaSeleccionada = monedaSelect.value; // Guardamos el valor seleccionado
-        console.log("Bodega seleccionada:", monedaSeleccionada);
+        monedaSeleccionada = monedaSelect.value;
+
+        if (monedaSeleccionada) {
+            console.log("Moneda seleccionada:", monedaSeleccionada);
+            errorMsgMoneda.textContent = "";
+            aplicarEstilo(true,monedaSelect);
+        } else {
+            errorMsgMoneda.textContent = "Debes seleccionar una moneda.";
+            aplicarEstilo(false,monedaSelect);
+        }
     });
 
+
+    //---------------
     // Listener Enviar
+
     botonGuardar.addEventListener("click", async function (event) {
         event.preventDefault();
         let checkboxes = document.querySelectorAll('input[name="material"]:checked');
@@ -495,7 +488,7 @@ document.addEventListener("DOMContentLoaded", function () {
             //return;
         }
 
-        else if (validarBodega() === false) {
+        else if (validartest() === false) {
             console.error("Error: Debes seleccionar aluna bodega");
             return;
         }
@@ -508,7 +501,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 validarNombreBackend(inputNombre.value),
                 validarPrecioBackend(inputPrecio.value),
                 validarDescripcionBackend(inputDescripcion.value),
-                validarMaterialesBackend(valores)
+
             ]);
 
             if (resultados.includes(null) || resultados.includes(false)) {

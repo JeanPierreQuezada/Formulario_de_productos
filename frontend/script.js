@@ -7,6 +7,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const inputPrecio = document.getElementById("precio");
     const inputDescripcion = document.getElementById("descripcion");
 
+    const bodegaSelect = document.getElementById("bodega");
+    const sucursalSelect = document.getElementById("sucursal");
+    const monedaSelect = document.getElementById("moneda");
+
     const errorMsg = document.getElementById("msg-codigo");
     const errorMsgNombre = document.getElementById("msg-nombre");
     const errorMsgPrecio = document.getElementById("msg-precio");
@@ -19,10 +23,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const botonGuardar = document.getElementById("guardar");
 
-    // DB - Back
-    const bodegaSelect = document.getElementById("bodega");
-    const sucursalSelect = document.getElementById("sucursal");
-    const monedaSelect = document.getElementById("moneda");
+    let bodegaSeleccionada = "";
+    let sucursalSeleccionada = "";
+    let monedaSeleccionada = "";
 
     // Listener Código
     inputCodigo.addEventListener("focus", function () {
@@ -347,7 +350,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Bodega
     function validarBodega() {
-        console.log(bodegaSelect)
         if (bodegaSelect.value === "") {
             errorMsgBodega.textContent = "Debes seleccionar una bodega.";
             aplicarEstilo(false,errorMsgBodega);
@@ -359,23 +361,44 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    function validarBodegaBackend() {
+    function cargarBodegas() {
         fetch(`${CONFIG.API_BASE_URL}get_bodegas.php`)
-        .then(response => response.json())
-        .then(data => {
-            data.forEach(bodega => {
-                let option = new Option(bodega.nombre, bodega.id);
-                bodegaSelect.add(option);
-            });
-        })
-        .catch(error => console.error("Error cargando bodegas:", error));
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Error al obtener las bodegas");
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.bodegas) {
+                    data.bodegas.forEach(bodega => {
+                        let option = document.createElement("option");
+                        option.value = bodega.id;
+                        option.textContent = bodega.nombre;
+                        bodegaSelect.appendChild(option);
+                    });
+                } else {
+                    console.error("Formato de datos incorrecto");
+                }
+            })
+            .catch(error => console.error("Error:", error));
     }
 
-    
+    bodegaSelect.addEventListener("change", function () {
+        bodegaSeleccionada = bodegaSelect.value;
 
-    // Sucursal ---------------
+        if (bodegaSeleccionada) {
+            console.log("Bodega seleccionada:", bodegaSeleccionada);
+            cargarSucursales(bodegaSeleccionada);
+        } else {
+            console.warn("Debe seleccionar una bodega válida.");
+            selectSucursal.innerHTML = '<option value="">Seleccione una opción</option>';
+            selectSucursal.disabled = true;
+        }
+    });
+
+    // Sucursal
     function validarSucursal() {
-        console.log(sucursalSelect)
         if (bodegaSelect.value === "") {
             errorMsgBodega.textContent = "Debes seleccionar una bodega.";
             aplicarEstilo(false,errorMsgBodega);
@@ -387,9 +410,41 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    function cargarSucursales(bodegaId){
+        fetch(`${CONFIG.API_BASE_URL}get_sucursales.php?bodega_id=${bodegaId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Error al obtener las sucursales");
+                }
+                return response.json();
+            })
+            .then(data => {
+                sucursalSelect.innerHTML = '<option value="">Seleccione una opción</option>';
+
+                if (data.sucursales && data.sucursales.length > 0) {
+                    sucursalSelect.disabled = false;
+                    data.sucursales.forEach(sucursal => {
+                        let option = document.createElement("option");
+                        option.value = sucursal.id;
+                        option.textContent = sucursal.nombre;
+                        sucursalSelect.appendChild(option);
+                    });
+                } else {
+                    console.warn("No hay sucursales disponibles para esta bodega.");
+                    sucursalSelect.disabled = true;
+                }
+            })
+            .catch(error => console.error("Error:", error));
+    }
+
+    sucursalSelect.addEventListener("change", function () {
+        sucursalSeleccionada = sucursalSelect.value;
+        console.log("Sucursal seleccionada:", sucursalSeleccionada);
+    });
+
+
     // Moneda
     function validarMoneda() {
-        console.log(monedaSelect)
         if (monedaSelect.value === "") {
             errorMsgMoneda.textContent = "Debe seleccionar una moneda.";
             aplicarEstilo(false,errorMsgMoneda);
@@ -401,32 +456,32 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    function validarMonedasBackend() {    
+    function cargarMonedas() {    
         fetch(`${CONFIG.API_BASE_URL}get_monedas.php`)
-        .then(response => response.json())
-        .then(data => {
-            data.forEach(moneda => {
-                let option = new Option(moneda.nombre, moneda.id);
-                monedaSelect.add(option);
-            });
-        })
-        .catch(error => console.error("Error cargando monedas:", error));
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Error al obtener las monedas");
+            }
+            return response.json();
+            })
+            .then(data => {
+                if (data.monedas) {
+                    data.monedas.forEach(moneda => {
+                        let option = document.createElement("option");
+                        option.value = moneda.id;
+                        option.textContent = moneda.nombre;
+                        monedaSelect.appendChild(option);
+                    });
+                } else {
+                    console.error("Formato de datos incorrecto");
+                }
+            })
+            .catch(error => console.error("Error:", error));
     }
 
-    // Cargar Sucursales
-    bodegaSelect.addEventListener("change", function () {
-        sucursalSelect.innerHTML = '<option value="">Seleccione...</option>';
-        if (this.value) {
-            fetch(`sucursales.php?bodega_id=${this.value}`)
-                .then(response => response.json())
-                .then(data => {
-                    data.forEach(sucursal => {
-                        let option = new Option(sucursal.nombre, sucursal.id);
-                        sucursalSelect.add(option);
-                    });
-                })
-                .catch(error => console.error("Error cargando sucursales:", error));
-        }
+    monedaSelect.addEventListener("change", function () {
+        monedaSeleccionada = monedaSelect.value; // Guardamos el valor seleccionado
+        console.log("Bodega seleccionada:", monedaSeleccionada);
     });
 
     // Listener Enviar
@@ -472,4 +527,7 @@ document.addEventListener("DOMContentLoaded", function () {
             mostrarLoading(false);
         }
     });
+
+    cargarBodegas();
+    cargarMonedas();
 });

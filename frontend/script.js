@@ -2,6 +2,8 @@ import CONFIG from './config.js';
 
 // Validación del campo Código
 document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("formProducto");
+
     const inputCodigo = document.getElementById("codigo");
     const inputNombre = document.getElementById("nombre");
     const inputPrecio = document.getElementById("precio");
@@ -21,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const errorMsgSucursal = document.getElementById("msg-sucursal");
     const errorMsgMoneda = document.getElementById("msg-moneda");
 
-    const botonGuardar = document.getElementById("guardar");
+    const btnEnviar = document.getElementById("guardar");
 
     let bodegaSeleccionada = "";
     let sucursalSeleccionada = "";
@@ -29,6 +31,15 @@ document.addEventListener("DOMContentLoaded", function () {
     let timeoutId;
 
     let checkboxes = document.querySelectorAll('input[name="material"]');
+    let valoresCheckbox = [];
+
+    let codigoValido = null;
+    let nombreValido = null;
+    let precioValido = null;
+    let descripcionValido = null;
+    let bodegaValido = null;
+    let sucursalValido = null;
+    let monedaValido = null;
 
     // Listener Código
     inputCodigo.addEventListener("input", function () {
@@ -97,7 +108,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Codigo
     function validarCodigo() {
-        const valor = inputCodigo.value.trim();
+        const valor =inputCodigo.value.trim();
         const regex = /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]+$/;
 
         if (valor.length === 0) {
@@ -131,23 +142,25 @@ document.addEventListener("DOMContentLoaded", function () {
             if (data.error) {
                 errorMsg.textContent = data.error;
                 aplicarEstilo(false,inputCodigo);
-                return;
+                return false;
             }
 
             if (!data.unico) {
                 errorMsg.textContent = "El código del producto ya está registrado";
                 aplicarEstilo(false,inputCodigo);
+                return false;
             } else {
                 errorMsg.textContent = "";
-                console.log(data.unico)
+                console.log(data.unico);
                 aplicarEstilo(true,inputCodigo);
-                return data.unico;
+                return true;
             }
         })
         .catch(error => {
             console.error("Error en la validación del código:", error);
             errorMsg.textContent = "Error al validar. Intenta de nuevo.";
-            aplicarEstilo(false);
+            aplicarEstilo(false,inputCodigo);
+            return false;
         });
     }
 
@@ -187,18 +200,19 @@ document.addEventListener("DOMContentLoaded", function () {
             if (data.error) {
                 errorMsgNombre.textContent = data.error;
                 aplicarEstilo(false,inputNombre);
-                return;
+                return false;
             } else {
                 errorMsgNombre.textContent = "";
                 console.log(data.estado);
                 aplicarEstilo(true,inputNombre);
-                return data.estado;
+                return true;
             }
         })
         .catch(error => {
             console.error("Error en la validación del nombre:", error);
             errorMsgNombre.textContent = "Error al validar. Intenta de nuevo.";
             aplicarEstilo(false,inputNombre);
+            return false;
         });
     }
 
@@ -234,18 +248,19 @@ document.addEventListener("DOMContentLoaded", function () {
             if (data.error) {
                 errorMsgPrecio.textContent = data.error;
                 aplicarEstilo(false,inputPrecio);
-                return;
+                return false;
             } else {
                 errorMsgPrecio.textContent = "";
                 console.log(data.estado);
                 aplicarEstilo(true,inputPrecio);
-                return data.estado;
+                return true;
             }
         })
         .catch(error => {
             console.error("Error en la validación del nombre:", error);
             errorMsgPrecio.textContent = "Error al validar. Intenta de nuevo.";
             aplicarEstilo(false,inputPrecio);
+            return false;
         });
     }
 
@@ -281,18 +296,19 @@ document.addEventListener("DOMContentLoaded", function () {
             if (data.error) {
                 errorMsgDescripcion.textContent = data.error;
                 aplicarEstilo(false,inputDescripcion);
-                return;
+                return false;
             } else {
                 errorMsgDescripcion.textContent = "";
                 console.log(data.estado);
                 aplicarEstilo(true,inputDescripcion);
-                return data.estado;
+                return true;
             }
         })
         .catch(error => {
             console.error("Error en la validación del nombre:", error);
             errorMsgDescripcion.textContent = "Error al validar. Intenta de nuevo.";
             aplicarEstilo(false,inputDescripcion);
+            return false;
         });
     }
 
@@ -306,15 +322,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function validarMateriales() {
-        let valores = obtenerValoresSeleccionados();
-        //console.log(valores)
-        if (valores.length < 2) {
+        valoresCheckbox  = obtenerValoresSeleccionados();
+        if (valoresCheckbox.length < 2) {
             errorMsgMaterial.textContent = "Debes seleccionar al menos dos materiales.";
             return false;
         } else {
             errorMsgMaterial.textContent = "";
+            return true;
         }
-        return valores;
     }
 
     function validarMaterialesBackend(nombre) {
@@ -345,11 +360,16 @@ document.addEventListener("DOMContentLoaded", function () {
     // Listener Materiales
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener("change", () => {
-            let valores = validarMateriales();
-            console.log("Materiales seleccionados:", valores);
-            if (valores.length > 0) {
-                validarMaterialesBackend(valores.join(','));
+
+            if (validarMateriales()) {
+                validarMaterialesBackend(valoresCheckbox.join(','));
             }
+
+            //let valores = validarMateriales();
+            //console.log("Materiales seleccionados:", valores);
+            //if (valores) {
+             //   validarMaterialesBackend(valores.join(','));
+            //}
         });
     });
 
@@ -474,53 +494,39 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-
-    //---------------
-    // Listener Enviar
-
-    botonGuardar.addEventListener("click", async function (event) {
+    // Guardar Producto en DB
+    form.addEventListener("submit", function (event) {
         event.preventDefault();
-        let checkboxes = document.querySelectorAll('input[name="material"]:checked');
-        let valores = Array.from(checkboxes).map(checkbox => checkbox.value);
 
-        if (!validarMateriales(valores)) {
-            console.error("Error: Debes seleccionar al menos dos materiales");
-            //return;
-        }
+        const producto = {
+            codigo: inputCodigo.value,
+            nombre: inputNombre.value,
+            precio: parseFloat(inputPrecio.value),
+            descripcion: inputDescripcion.value,
+            bodega: selectBodega.value,
+            sucursal: selectSucursal.value,
+            moneda: selectMoneda.value
+        };
 
-        else if (validartest() === false) {
-            console.error("Error: Debes seleccionar aluna bodega");
-            return;
-        }
-
-        mostrarLoading(true);
-
-        try {
-            let resultados = await Promise.all([
-                validarCodigoBackend(inputCodigo.value),
-                validarNombreBackend(inputNombre.value),
-                validarPrecioBackend(inputPrecio.value),
-                validarDescripcionBackend(inputDescripcion.value),
-
-            ]);
-
-            if (resultados.includes(null) || resultados.includes(false)) {
-                console.error("Error: Una o más validaciones han fallado.");
-                mostrarLoading(false); // Ocultar loader si hay errores
-                return;
+        fetch(`${CONFIG.API_BASE_URL}agregar_producto.php`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(producto)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Producto agregado exitosamente");
+                form.reset();
+                btnEnviar.disabled = true;
+            } else {
+                alert("Error: " + data.error);
             }
-    
-            console.log("Enviar todas las nuevas variables");
-
-            //await enviarDatosBackend(inputCodigo.value, inputNombre.value, inputPrecio.value, inputDescripcion.value, valores);
-
-        } catch (error) {
-            console.error("Error en una o más validaciones:", error);
-        } finally {
-            mostrarLoading(false);
-        }
+        })
+        .catch(error => console.error("Error al agregar producto:", error));
     });
 
+    // Carga de listas a elegir
     cargarBodegas();
     cargarMonedas();
 });

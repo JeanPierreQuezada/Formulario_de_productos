@@ -109,6 +109,10 @@ button {
     border-radius: 4px;
 }
 
+.disabledButton {
+    cursor: not-allowed;
+}
+
 /*Estilos de varlidaciones*/
 p{
     height: 11px;

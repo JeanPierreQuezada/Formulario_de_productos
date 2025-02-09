@@ -1,532 +1,219 @@
 import CONFIG from './config.js';
 
-// Validación del campo Código
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("formProducto");
-
-    const inputCodigo = document.getElementById("codigo");
-    const inputNombre = document.getElementById("nombre");
-    const inputPrecio = document.getElementById("precio");
-    const inputDescripcion = document.getElementById("descripcion");
-
+    const btnEnviar = document.getElementById("guardar");
+    const inputFields = ["codigo", "nombre", "precio", "descripcion"];
+    const selectFields = ["bodega", "sucursal", "moneda"];
+    const checkboxes = document.querySelectorAll('input[name="material"]');
     const bodegaSelect = document.getElementById("bodega");
     const sucursalSelect = document.getElementById("sucursal");
     const monedaSelect = document.getElementById("moneda");
-
-    const errorMsg = document.getElementById("msg-codigo");
-    const errorMsgNombre = document.getElementById("msg-nombre");
-    const errorMsgPrecio = document.getElementById("msg-precio");
-    const errorMsgDescripcion = document.getElementById("msg-descripcion");
     const errorMsgMaterial = document.getElementById("msg-materiales");
-
-    const errorMsgBodega = document.getElementById("msg-bodega");
-    const errorMsgSucursal = document.getElementById("msg-sucursal");
-    const errorMsgMoneda = document.getElementById("msg-moneda");
-
-    const btnEnviar = document.getElementById("guardar");
-
-    let bodegaSeleccionada = "";
-    let sucursalSeleccionada = "";
-    let monedaSeleccionada = "";
+    const errorMsgSelect = {
+        bodega: document.getElementById("msg-bodega"),
+        sucursal: document.getElementById("msg-sucursal"),
+        moneda: document.getElementById("msg-moneda")
+    };
+    
+    let validFields = {};
     let timeoutId;
-
-    let checkboxes = document.querySelectorAll('input[name="material"]');
-    let valoresCheckbox = [];
-
-    let codigoValido = null;
-    let nombreValido = null;
-    let precioValido = null;
-    let descripcionValido = null;
-    let bodegaValido = null;
-    let sucursalValido = null;
-    let monedaValido = null;
-
-    // Listener Código
-    inputCodigo.addEventListener("input", function () {
-        clearTimeout(timeoutId);
-
-        if (validarCodigo()) {
-            timeoutId = setTimeout(() => {
-                validarCodigoBackend(inputCodigo.value.trim());
-            }, 4000);
-        }
+    
+    inputFields.forEach(id => {
+        const input = document.getElementById(id);
+        validFields[id] = false;
+        input.addEventListener("input", () => debounce(() => validateInput(id), 1500));
     });
-
-    // Listener Nombre
-    inputNombre.addEventListener("input", function () {
-        clearTimeout(timeoutId);
-
-        if (validarNombre()) {
-            timeoutId = setTimeout(() => {
-                validarNombreBackend(inputNombre.value.trim());
-            }, 4000);
-        }
+    
+    selectFields.forEach(id => {
+        const select = document.getElementById(id);
+        validFields[id] = false;
+        select.addEventListener("change", () => validateSelect(id));
     });
-
-    // Listener Precio
-    inputPrecio.addEventListener("input", function () {
-        clearTimeout(timeoutId);
-
-        if (validarPrecio()) {
-            timeoutId = setTimeout(() => {
-                validarPrecioBackend(inputPrecio.value.trim());
-            }, 4000);
-        }
-    });
-
-    // Listener Descripción
-    inputDescripcion.addEventListener("input", function () {
-        clearTimeout(timeoutId);
-
-        if (validarDescripcion()) {
-            timeoutId = setTimeout(() => {
-                validarDescripcionBackend(inputDescripcion.value.trim());
-            }, 4000);
-        }
-    }); 
-
-    // Función para mostrar u ocultar el indicador de carga
-    function mostrarLoading(mostrar) {
-        const loadingIndicator = document.getElementById("guardar");
-        if (mostrar) {
-            loadingIndicator.textContent = "Cargando ...";
-        } else {
-            loadingIndicator.textContent = "Guardar Producto";
-        }
-    }
-
-    // Personalización de estilo por errores
-    function aplicarEstilo(esValido,name) {
-        if (esValido) {
-            name.classList.add("valid");
-            name.classList.remove("error");
-        } else {
-            name.classList.add("error");
-            name.classList.remove("valid");
-        }
-    }
-
-    // Codigo
-    function validarCodigo() {
-        const valor =inputCodigo.value.trim();
-        const regex = /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]+$/;
-
-        if (valor.length === 0) {
-            errorMsg.textContent = "El código del producto no puede estar en blanco";
-            aplicarEstilo(false,inputCodigo);
-            return false;
-        } else if (!regex.test(valor)) {
-            errorMsg.textContent = "El código del producto solo debe contener letras y números";
-            aplicarEstilo(false,inputCodigo);
-            return false;
-        } else if (valor.length < 5 || valor.length > 15) {
-            errorMsg.textContent = "El código del producto debe tener entre 5 y 15 caracteres";
-            aplicarEstilo(false,inputCodigo);
-            return false;
-        } else {
-            errorMsg.textContent = "";
-            aplicarEstilo(true,inputCodigo);
-            return true;
-        }
-    }
-
-    function validarCodigoBackend(codigo) {
-        fetch(`${CONFIG.API_BASE_URL}validar_codigo.php?codigo=` + encodeURIComponent(codigo))
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Error en la respuesta del servidor: " + response.status);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.error) {
-                errorMsg.textContent = data.error;
-                aplicarEstilo(false,inputCodigo);
-                return false;
-            }
-
-            if (!data.unico) {
-                errorMsg.textContent = "El código del producto ya está registrado";
-                aplicarEstilo(false,inputCodigo);
-                return false;
-            } else {
-                errorMsg.textContent = "";
-                console.log(data.unico);
-                aplicarEstilo(true,inputCodigo);
-                return true;
-            }
-        })
-        .catch(error => {
-            console.error("Error en la validación del código:", error);
-            errorMsg.textContent = "Error al validar. Intenta de nuevo.";
-            aplicarEstilo(false,inputCodigo);
-            return false;
-        });
-    }
-
-    // Nombre
-    function validarNombre() {
-        const valor = inputNombre.value.trim();
-        const regex = /^[A-Za-zÁÉÍÓÚáéíóúÜüÑñ]+$/;
-
-        if (valor.length === 0) {
-            errorMsgNombre.textContent = "El nombre del producto no puede estar en blanco";
-            aplicarEstilo(false,inputNombre);
-            return false;
-        } else if (!regex.test(valor)) {
-            errorMsgNombre.textContent = "El nombre del producto solo debe contener letras.";
-            aplicarEstilo(false,inputNombre);
-            return false;
-        } else if (valor.length < 2 || valor.length > 50) {
-            errorMsgNombre.textContent = "El nombre del producto debe tener entre 5 y 50 caracteres";
-            aplicarEstilo(false,inputNombre);
-            return false;
-        } else {
-            errorMsgNombre.textContent = "";
-            aplicarEstilo(true,inputNombre);
-            return true;
-        }
-    }
-
-    function validarNombreBackend(nombre) {
-        fetch(`${CONFIG.API_BASE_URL}validar_nombre.php?nombre=` + encodeURIComponent(nombre))
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Error en la respuesta del servidor: " + response.status);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.error) {
-                errorMsgNombre.textContent = data.error;
-                aplicarEstilo(false,inputNombre);
-                return false;
-            } else {
-                errorMsgNombre.textContent = "";
-                console.log(data.estado);
-                aplicarEstilo(true,inputNombre);
-                return true;
-            }
-        })
-        .catch(error => {
-            console.error("Error en la validación del nombre:", error);
-            errorMsgNombre.textContent = "Error al validar. Intenta de nuevo.";
-            aplicarEstilo(false,inputNombre);
-            return false;
-        });
-    }
-
-    // Precio
-    function validarPrecio() {
-        const valor = inputPrecio.value.trim();
-        const regex = /^\d+(\.\d{1,2})?$/;
-
-        if (valor.length === 0) {
-            errorMsgPrecio.textContent = "El precio del producto no debe quedar en blanco";
-            aplicarEstilo(false,inputPrecio);
-            return false;
-        } else if (!regex.test(valor)) {
-            errorMsgPrecio.textContent = "Sólo números positivos con hasta dos decimales";
-            aplicarEstilo(false,inputPrecio);
-            return false;
-        } else {
-            errorMsgPrecio.textContent = "";
-            aplicarEstilo(true,inputPrecio);
-            return true;
-        }
-    }
-
-    function validarPrecioBackend(nombre) {
-        fetch(`${CONFIG.API_BASE_URL}validar_precio.php?precio=` + encodeURIComponent(nombre))
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Error en la respuesta del servidor: " + response.status);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.error) {
-                errorMsgPrecio.textContent = data.error;
-                aplicarEstilo(false,inputPrecio);
-                return false;
-            } else {
-                errorMsgPrecio.textContent = "";
-                console.log(data.estado);
-                aplicarEstilo(true,inputPrecio);
-                return true;
-            }
-        })
-        .catch(error => {
-            console.error("Error en la validación del nombre:", error);
-            errorMsgPrecio.textContent = "Error al validar. Intenta de nuevo.";
-            aplicarEstilo(false,inputPrecio);
-            return false;
-        });
-    }
-
-    // Descripción
-    function validarDescripcion() {
-        const valor = inputDescripcion.value.trim();
-        const regex = /^.{10,1000}$/;
-
-        if (valor.length === 0) {
-            errorMsgDescripcion.textContent = "La descripcion del producto no debe quedar en blanco";
-            aplicarEstilo(false,inputDescripcion);
-            return false;
-        } else if (!regex.test(valor)) {
-            errorMsgDescripcion.textContent = "Se permiten entre 10 a 1000 caracteres";
-            aplicarEstilo(false,inputDescripcion);
-            return false;
-        } else {
-            errorMsgDescripcion.textContent = "";
-            aplicarEstilo(true,inputDescripcion);
-            return true;
-        }
-    }
-
-    function validarDescripcionBackend(nombre) {
-        fetch(`${CONFIG.API_BASE_URL}validar_descripcion.php?descripcion=` + encodeURIComponent(nombre))
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Error en la respuesta del servidor: " + response.status);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.error) {
-                errorMsgDescripcion.textContent = data.error;
-                aplicarEstilo(false,inputDescripcion);
-                return false;
-            } else {
-                errorMsgDescripcion.textContent = "";
-                console.log(data.estado);
-                aplicarEstilo(true,inputDescripcion);
-                return true;
-            }
-        })
-        .catch(error => {
-            console.error("Error en la validación del nombre:", error);
-            errorMsgDescripcion.textContent = "Error al validar. Intenta de nuevo.";
-            aplicarEstilo(false,inputDescripcion);
-            return false;
-        });
-    }
-
-    // Materiales
-    function obtenerValoresSeleccionados() {
-        let seleccionados = Array.from(checkboxes)
-            .filter(checkbox => checkbox.checked)
-            .map(checkbox => checkbox.value);
-
-        return seleccionados.length > 0 ? seleccionados : [];
-    }
-
-    function validarMateriales() {
-        valoresCheckbox  = obtenerValoresSeleccionados();
-        if (valoresCheckbox.length < 2) {
-            errorMsgMaterial.textContent = "Debes seleccionar al menos dos materiales.";
-            return false;
-        } else {
-            errorMsgMaterial.textContent = "";
-            return true;
-        }
-    }
-
-    function validarMaterialesBackend(nombre) {
-        fetch(`${CONFIG.API_BASE_URL}validar_materiales.php?materiales=` + encodeURIComponent(nombre))
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Error en la respuesta del servidor: " + response.status);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.error) {
-                errorMsgMaterial.textContent = data.error;
-                return false;
-            } else {
-                errorMsgMaterial.textContent = "";
-                console.log(data.estado);
-                return true;
-            }
-        })
-        .catch(error => {
-            console.error("Error en la validación del nombre:", error);
-            errorMsgMaterial.textContent = "Error al validar. Intenta de nuevo.";
-            aplicarEstilo(false,inputDescripcion);
-        });
-    }
-
-    // Listener Materiales
+    
     checkboxes.forEach(checkbox => {
-        checkbox.addEventListener("change", () => {
-
-            if (validarMateriales()) {
-                validarMaterialesBackend(valoresCheckbox.join(','));
-            }
-
-            //let valores = validarMateriales();
-            //console.log("Materiales seleccionados:", valores);
-            //if (valores) {
-             //   validarMaterialesBackend(valores.join(','));
-            //}
-        });
+        checkbox.addEventListener("change", validateMaterials);
     });
 
-    // Bodega
-    function cargarBodegas() {
-        fetch(`${CONFIG.API_BASE_URL}get_bodegas.php`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Error al obtener las bodegas");
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.bodegas) {
-                    data.bodegas.forEach(bodega => {
-                        let option = document.createElement("option");
-                        option.value = bodega.id;
-                        option.textContent = bodega.nombre;
-                        bodegaSelect.appendChild(option);
-                    });
-                } else {
-                    console.error("Formato de datos incorrecto");
-                }
-            })
-            .catch(error => console.error("Error:", error));
+    function debounce(callback, delay) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(callback, delay);
     }
 
-    // Listener Selector Bodega
-    bodegaSelect.addEventListener("change", function () {
-        bodegaSeleccionada = bodegaSelect.value;
+    function validateInput(field) {
+        const input = document.getElementById(field);
+        const value = input.value.trim();
+        let isValid = false;
+        const errorMsg = document.getElementById(`msg-${field}`);
 
-        if (bodegaSeleccionada) {
-            console.log("Bodega seleccionada:", bodegaSeleccionada);
-            cargarSucursales(bodegaSeleccionada);
-            errorMsgBodega.textContent = "";
-            aplicarEstilo(true,bodegaSelect);
-        } else {
-            errorMsgBodega.textContent = "Debes seleccionar una bodega.";
-            aplicarEstilo(false,bodegaSelect);
-            sucursalSelect.disabled = true;
-        }
-    });
-
-    // Sucursal
-    function cargarSucursales(bodegaId){
-        fetch(`${CONFIG.API_BASE_URL}get_sucursales.php?bodega_id=${bodegaId}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Error al obtener las sucursales");
-                }
-                return response.json();
-            })
-            .then(data => {
-                sucursalSelect.innerHTML = '<option value="">Seleccione una opción</option>';
-
-                if (data.sucursales && data.sucursales.length > 0) {
-                    sucursalSelect.disabled = false;
-                    data.sucursales.forEach(sucursal => {
-                        let option = document.createElement("option");
-                        option.value = sucursal.id;
-                        option.textContent = sucursal.nombre;
-                        sucursalSelect.appendChild(option);
-                    });
-                } else {
-                    console.warn("No hay sucursales disponibles para esta bodega.");
-                    sucursalSelect.disabled = true;
-                }
-            })
-            .catch(error => console.error("Error:", error));
-    }
-
-    // Listener Selector Sucursal
-    sucursalSelect.addEventListener("change", function () {
-        sucursalSeleccionada = sucursalSelect.value;
-
-        if (sucursalSeleccionada) {
-            console.log("Sucursal seleccionada:", sucursalSeleccionada);
-            errorMsgSucursal.textContent = "";
-            aplicarEstilo(true,sucursalSelect);
-        } else {
-            errorMsgSucursal.textContent = "Debes seleccionar una sucursal.";
-            aplicarEstilo(false,sucursalSelect);
-        }
-    });
-
-
-    // Moneda
-    function cargarMonedas() {    
-        fetch(`${CONFIG.API_BASE_URL}get_monedas.php`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Error al obtener las monedas");
-            }
-            return response.json();
-            })
-            .then(data => {
-                if (data.monedas) {
-                    data.monedas.forEach(moneda => {
-                        let option = document.createElement("option");
-                        option.value = moneda.id;
-                        option.textContent = moneda.nombre;
-                        monedaSelect.appendChild(option);
-                    });
-                } else {
-                    console.error("Formato de datos incorrecto");
-                }
-            })
-            .catch(error => console.error("Error:", error));
-    }
-
-    // Listener Selector Moneda
-    monedaSelect.addEventListener("change", function () {
-        monedaSeleccionada = monedaSelect.value;
-
-        if (monedaSeleccionada) {
-            console.log("Moneda seleccionada:", monedaSeleccionada);
-            errorMsgMoneda.textContent = "";
-            aplicarEstilo(true,monedaSelect);
-        } else {
-            errorMsgMoneda.textContent = "Debes seleccionar una moneda.";
-            aplicarEstilo(false,monedaSelect);
-        }
-    });
-
-    // Guardar Producto en DB
-    form.addEventListener("submit", function (event) {
-        event.preventDefault();
-
-        const producto = {
-            codigo: inputCodigo.value,
-            nombre: inputNombre.value,
-            precio: parseFloat(inputPrecio.value),
-            descripcion: inputDescripcion.value,
-            bodega: selectBodega.value,
-            sucursal: selectSucursal.value,
-            moneda: selectMoneda.value
+        const rules = {
+            codigo: /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]+$/,
+            nombre: /^[A-Za-zÁÉÍÓÚáéíóúÜüÑñ ]{2,50}$/,
+            precio: /^\d+(\.\d{1,2})?$/,
+            descripcion: /^.{10,1000}$/
         };
 
-        fetch(`${CONFIG.API_BASE_URL}agregar_producto.php`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(producto)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert("Producto agregado exitosamente");
-                form.reset();
-                btnEnviar.disabled = true;
-            } else {
-                alert("Error: " + data.error);
-            }
-        })
-        .catch(error => console.error("Error al agregar producto:", error));
-    });
+        if (!value) {
+            errorMsg.textContent = `El campo ${field} no puede estar vacío`;
+            isValid = false;
+        } else if (!rules[field].test(value)) {
+            errorMsg.textContent = `Formato incorrecto para ${field}`;
+            isValid = false;
+        } else {
+            errorMsg.textContent = "";
+            isValid = true;
+            validateBackend(field, value);
+        }
 
-    // Carga de listas a elegir
-    cargarBodegas();
-    cargarMonedas();
+        input.classList.toggle("valid", isValid);
+        input.classList.toggle("error", !isValid);
+        validFields[field] = isValid;
+        checkFormValidity();
+    }
+    
+    function validateBackend(field, value) {
+        console.log(`Validando ${field} en backend...`);
+        fetch(`${CONFIG.API_BASE_URL}validar_${field}.php?${field}=` + encodeURIComponent(value))
+            .then(response => response.json())
+            .then(data => {
+                validFields[field] = !data.error && (field !== 'codigo' || data.unico);
+                console.log(`${field} validado en backend:`, validFields[field]);
+                checkFormValidity();
+            })
+            .catch(error => console.error(`Error en validación de ${field}:`, error));
+    }
+    
+    function validateMaterials() {
+        const selected = Array.from(checkboxes).filter(checkbox => checkbox.checked).map(checkbox => checkbox.value);
+        validFields["materiales"] = selected.length >= 2;
+        
+        if (validFields["materiales"]) {
+            errorMsgMaterial.textContent = "";
+            validateMaterialsBackend(selected);
+        } else {
+            errorMsgMaterial.textContent = "Debe seleccionar al menos dos materiales.";
+        }
+        checkFormValidity();
+    }
+
+    function validateMaterialsBackend(selectedMaterials) {
+        console.log("Validando materiales en backend...");
+        fetch(`${CONFIG.API_BASE_URL}validar_materiales.php?materiales=` + encodeURIComponent(selectedMaterials.join(",")))
+            .then(response => response.json())
+            .then(data => {
+                validFields["materiales"] = !data.error;
+                console.log("Materiales validado en backend:", validFields["materiales"]);
+                if (!validFields["materiales"]) {
+                    console.log("Error en la validación de materiales.");
+                }
+                checkFormValidity();
+            })
+            .catch(error => {
+                console.error("Error en validación de materiales:", error);
+            });
+    }
+
+    function validateSelect(field) {
+        const select = document.getElementById(field);
+        validFields[field] = select.value !== "";
+        
+        if (validFields[field]) {
+            errorMsgSelect[field].textContent = "";
+            select.classList.add("valid");
+            select.classList.remove("error");
+        } else {
+            errorMsgSelect[field].textContent = `Debe seleccionar una opción para ${field}.`;
+            select.classList.add("error");
+            select.classList.remove("valid");
+        }
+        checkFormValidity();
+    }
+
+    function loadBodegas() {
+        fetch(`${CONFIG.API_BASE_URL}get_bodegas.php`)
+            .then(response => response.json())
+            .then(data => {
+                data.bodegas.forEach(bodega => {
+                    let option = document.createElement("option");
+                    option.value = bodega.id;
+                    option.textContent = bodega.nombre;
+                    bodegaSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error("Error al obtener bodegas:", error));
+    }
+    
+    function loadSucursales(bodegaId) {
+        fetch(`${CONFIG.API_BASE_URL}get_sucursales.php?bodega_id=${bodegaId}`)
+            .then(response => response.json())
+            .then(data => {
+                sucursalSelect.innerHTML = '<option value="">Seleccione una opción</option>';
+                data.sucursales.forEach(sucursal => {
+                    let option = document.createElement("option");
+                    option.value = sucursal.id;
+                    option.textContent = sucursal.nombre;
+                    sucursalSelect.appendChild(option);
+                });
+                sucursalSelect.disabled = false;
+            })
+            .catch(error => console.error("Error al obtener sucursales:", error));
+    }
+    
+    function loadMonedas() {
+        fetch(`${CONFIG.API_BASE_URL}get_monedas.php`)
+            .then(response => response.json())
+            .then(data => {
+                data.monedas.forEach(moneda => {
+                    let option = document.createElement("option");
+                    option.value = moneda.id;
+                    option.textContent = moneda.nombre;
+                    monedaSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error("Error al obtener monedas:", error));
+    }
+
+    function checkFormValidity() {
+        const allValid = Object.values(validFields).every(value => value !== "" && value !== null);
+        if (allValid) {
+            btnEnviar.textContent = "Guardar Producto";
+            btnEnviar.disabled = false;
+            btnEnviar.style.cursor = "pointer";
+        } else {
+            btnEnviar.textContent = "Validando ...";
+            btnEnviar.disabled = true;
+            btnEnviar.style.cursor = "not-allowed";
+        }
+        console.log("Estado del formulario:", validFields);
+    }
+
+    form.addEventListener("submit", event => {
+        event.preventDefault();
+        if (!btnEnviar.disabled) {
+            btnEnviar.textContent = "Procesando ...";
+            fetch(`${CONFIG.API_BASE_URL}agregar_producto.php`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(Object.fromEntries(new FormData(form)))
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.success ? "Producto agregado exitosamente" : `Error: ${data.error}`);
+                console.log(data.success ? "Producto guardado con éxito" : "Error al guardar el producto", data);
+                if (data.success) form.reset();
+                btnEnviar.textContent = "Guardar Producto";
+                checkFormValidity();
+            })
+            .catch(error => {
+                console.error("Error al agregar producto:", error);
+                btnEnviar.textContent = "Guardar Producto";
+            });
+        }
+    });
+    
+    bodegaSelect.addEventListener("change", () => loadSucursales(bodegaSelect.value));
+    
+    loadBodegas();
+    loadMonedas();
+    checkFormValidity();
 });

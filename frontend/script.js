@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
         sucursal: document.getElementById("msg-sucursal"),
         moneda: document.getElementById("msg-moneda")
     };
-    let sucursalTouched = false;
+    let activarSucursal = false;
     
     let validFields = {};
     let debounceTimers = new Map();
@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     checkboxes.forEach(checkbox => {
-        checkbox.addEventListener("change", validateMaterials);
+        checkbox.addEventListener("change", validarMateriales);
     });
 
     function debounce(field, callback, delay) {
@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const value = input.value.trim();
         const errorMsg = document.getElementById(`msg-${field}`);
 
-        const rules = {
+        const reglas = {
             codigo: /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]+$/,
             nombre: /^[A-Za-zÁÉÍÓÚáéíóúÜüÑñ ]{2,50}$/,
             precio: /^\d+(\.\d{1,2})?$/,
@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        if (!rules[field].test(value)) {
+        if (!reglas[field].test(value)) {
             errorMsg.textContent = `${mensajes[field]}`;
             validFields[field] = false;
             updateUI(field, false);
@@ -80,43 +80,56 @@ document.addEventListener("DOMContentLoaded", () => {
         errorMsg.textContent = "Validando...";
         input.classList.remove("valid", "error");
 
-        validateBackend(field, value);
+        validarBackend(field, value);
     }
 
-    async function validateBackend(field, value) {
+    async function validarBackend(field, value) {
         try {
             const response = await fetch(`${CONFIG.API_BASE_URL}validar_${field}.php?${field}=` + encodeURIComponent(value));
             const data = await response.json();
-            
-            validFields[field] = !data.error && (field !== 'codigo' || data.unico);
-            updateUI(field, validFields[field]);
+            const errorMsg = document.getElementById(`msg-${field}`);
+    
+            if (data.error) {
+                validFields[field] = false;
+                if (field === 'codigo' && !data.unico) {
+                    errorMsg.textContent = "El campo código no se puede repetir";
+                } else {
+                    errorMsg.textContent = `Error en ${field}`;
+                }
+                updateUI(field, false);
+                return;
+            }
+    
+            validFields[field] = true;
+            errorMsg.textContent = "";
+            updateUI(field, true);
         } catch (error) {
             console.error(`Error en validación de ${field}:`, error);
             validFields[field] = false;
             updateUI(field, false);
         }
     }
-
-    function validateMaterials() {
+    
+    function validarMateriales() {
         const selected = Array.from(checkboxes).filter(checkbox => checkbox.checked).map(checkbox => checkbox.value);
         validFields["materiales"] = selected.length >= 2;
         
         if (validFields["materiales"]) {
             errorMsgMaterial.textContent = "";
-            validateMaterialsBackend(selected);
+            validarMaterialesBackend(selected);
         } else {
             errorMsgMaterial.textContent = "Debe seleccionar al menos dos materiales.";
         }
 
-        validateMaterialsBackend(selected);
+        validarMaterialesBackend(selected);
     }
 
-    async function validateMaterialsBackend(selectedMaterials) {
+    async function validarMaterialesBackend(selectedMaterials) {
         try {
             const response = await fetch(`${CONFIG.API_BASE_URL}validar_materiales.php?materiales=` + encodeURIComponent(selectedMaterials.join(",")));
             const data = await response.json();
             validFields["materiales"] = !data.error;
-            checkFormValidity();
+            revisarValidacionForm();
         } catch (error) {
             console.error("Error en validación de materiales:", error);
         }
@@ -135,7 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
             select.classList.add("error");
             select.classList.remove("valid");
         }
-        checkFormValidity();
+        revisarValidacionForm();
     }
 
     function loadBodegas() {
@@ -211,13 +224,13 @@ document.addEventListener("DOMContentLoaded", () => {
             element.classList.remove("valid");
         }
         
-        checkFormValidity();
+        revisarValidacionForm();
     }
 
-    function checkFormValidity() {
+    function revisarValidacionForm() {
         const allValid = Object.values(validFields).every(value => value === true);
         btnEnviar.disabled = !allValid;
-        //btnEnviar.textContent = allValid ? "Guardar Producto" : "Validando...";
+        
         if (!allValid){
             btnEnviar.classList.add("disabledButton");
             btnEnviar.style.cursor = "not-allowed";
@@ -230,21 +243,55 @@ document.addEventListener("DOMContentLoaded", () => {
 
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
+                
         if (!btnEnviar.disabled) {
             btnEnviar.textContent = "Procesando ...";
             try {
+                let formData = {};
+
+                const formElements = new FormData(form);
+                formElements.forEach((value, key) => {
+                    formData[key] = value.trim();
+                });
+
+                formData.bodega = document.getElementById("bodega").value;
+                formData.sucursal = document.getElementById("sucursal").value;
+                formData.moneda = document.getElementById("moneda").value;
+
+                formData.descripcion = document.getElementById("descripcion").value.trim();
+
+                let materialesSeleccionados = Array.from(checkboxes)
+                    .filter(checkbox => checkbox.checked)
+                    .map(checkbox => checkbox.value);
+
+                formData.material = materialesSeleccionados;
+                //console.log("Datos enviados:", formData);
+                
                 const response = await fetch(`${CONFIG.API_BASE_URL}agregar_producto.php`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(Object.fromEntries(new FormData(form)))
+                    body: JSON.stringify(formData)
                 });
 
                 const data = await response.json();
                 alert(data.success ? "Producto agregado exitosamente" : `Error: ${data.error}`);
 
                 if (data.success) form.reset();
+
+                Object.keys(validFields).forEach(key => validFields[key] = false);
+                checkboxes.forEach(checkbox => checkbox.checked = false);
+
+                document.getElementById("bodega").selectedIndex = 0;
+                document.getElementById("sucursal").selectedIndex = 0;
+                document.getElementById("moneda").selectedIndex = 0;
+                document.querySelectorAll(".error-message").forEach(msg => msg.textContent = "");
+
+                document.querySelectorAll(".valid, .error").forEach(el => {
+                    el.classList.remove("valid", "error");
+                });
+
                 btnEnviar.textContent = "Guardar Producto";
-                checkFormValidity();
+                revisarValidacionForm();
             } catch (error) {
                 console.error("Error al agregar producto:", error);
                 btnEnviar.textContent = "Guardar Producto";
@@ -257,9 +304,9 @@ document.addEventListener("DOMContentLoaded", () => {
         sucursalSelect.innerHTML = '<option value="">Seleccione una opción</option>';
         sucursalSelect.disabled = true;
         errorMsgSelect["sucursal"].textContent = "";
-        checkFormValidity();
+        revisarValidacionForm();
 
-        if (sucursalTouched) { 
+        if (activarSucursal) { 
             validateSelect("sucursal");
         }
 
@@ -267,10 +314,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     sucursalSelect.addEventListener("change", () => {
-        sucursalTouched = true;
+        activarSucursal = true;
     });
 
     loadBodegas();
     loadMonedas();
-    checkFormValidity();
+    revisarValidacionForm();
 });

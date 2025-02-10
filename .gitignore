@@ -31,7 +31,6 @@ backend/src/.env
 
 # Volúmenes y datos de Docker
 db_data/
-db/init.sql
 
 # Caché y logs de PHP
 backend/src/.phpunit.result.cache

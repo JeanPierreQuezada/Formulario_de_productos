@@ -5,6 +5,8 @@ Este proyecto es un sistema web diseñado para la gestión de productos, desarro
 
 La aplicación se basa en una arquitectura **cliente-servidor**, donde el **frontend**, el **backend** y la **base de datos** están separados en contenedores independientes, proporcionando un entorno escalable, modular y fácilmente desplegable.
 
+![Tabla de productos](frontend/images/vista_responsiva.jpg)
+
 ---
 
 ## **📌 Instalación de Docker**
@@ -48,7 +50,7 @@ El sistema se compone de **tres contenedores Docker** que trabajan juntos:
 ---
 
 ## **📌 Configuración y Despliegue**
-Para iniciar el sistema, ejecuta:
+Para iniciar el sistema, abre "Docker Desktop" y en el terminal de la pc ejecuta:
 
 ```sh
 docker-compose up --build
@@ -119,7 +121,11 @@ Ejecuta el siguiente comando para acceder a PostgreSQL dentro de Docker:
 docker ps
 ```
 
-Se debe reemplazar "nombre_del_contenedor" por el número que representa el nombre del contenedor PostgreSQL, en el siguiente comando:
+Copiar el número del "CONTENEDOR_ID" de Postgres:
+
+![Tabla de productos](frontend/images/contenedor_postgres.jpg)
+
+Se debe reemplazar "nombre_del_contenedor" por el número que representa el nombre del contenedor PostgreSQL en el siguiente comando:
 
 ```sh
 docker exec -it nombre_del_contenedor psql -U myuser -d mydb
@@ -140,6 +146,8 @@ SELECT * FROM productos;
 SELECT COUNT(*) FROM productos;
 ```
 
+![Tabla de productos](frontend/images/productos_db.jpg)
+
 ### **5️⃣ Salir de PostgreSQL**
 ```sql
 \q
@@ -159,6 +167,8 @@ cp backend/src/.env.example backend/src/.env
 ```
 
 Después de esto, edita el archivo **`.env`** y configura los valores adecuados para la conexión a la base de datos. (Como este es un proyecto de ejemplo, el .env.example ya tiene los valores correctos).
+
+![Tabla de productos](frontend/images/env_file.jpg)
 
 ### **🔹 Validaciones en Backend**
 - Verificación de que todos los campos requeridos estén presentes antes de insertar un producto.

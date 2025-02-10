@@ -178,9 +178,3 @@ $stmt->bindParam(":codigo", $codigo);
 ```
 
 ---
-
-## **📌 Conclusión**
-El proyecto demuestra **una arquitectura moderna basada en Docker** que permite separar los servicios de manera eficiente.  
-Gracias a la estructura modular, es fácil de **escalar, mantener y desplegar** en diferentes entornos.  
-
----

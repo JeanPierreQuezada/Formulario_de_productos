@@ -116,19 +116,8 @@ Si deseas consultar los productos almacenados en la base de datos, sigue estos p
 ### **1️⃣ Ingresar al contenedor de PostgreSQL**
 Ejecuta el siguiente comando para acceder a PostgreSQL dentro de Docker:
 
-**Visualizar nombre del contenedor:**
 ```sh
-docker ps
-```
-
-Copiar el número del "CONTENEDOR_ID" de Postgres:
-
-![Tabla de productos](frontend/images/contenedor_postgres.jpg)
-
-Se debe reemplazar "nombre_del_contenedor" por el número que representa el nombre del contenedor PostgreSQL en el siguiente comando:
-
-```sh
-docker exec -it nombre_del_contenedor psql -U myuser -d mydb
+docker exec -it postgres_container psql -U myuser -d mydb
 ```
 
 ### **2️⃣ Ver las tablas disponibles**

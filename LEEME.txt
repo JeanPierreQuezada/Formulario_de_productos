@@ -116,14 +116,7 @@ ACCESO A POSTGRESQL DESDE LA TERMINAL
 Si deseas consultar los productos almacenados en la base de datos, sigue estos pasos:
 
 1. Ingresar al contenedor de PostgreSQL:
-   
-   Para visualizar el nombre del contenedor:
-       docker ps
-
-   Luego, ejecutar el siguiente comando, reemplazando "nombre_del_contenedor"
-   con el nombre real del contenedor de PostgreSQL:
-
-       docker exec -it nombre_del_contenedor psql -U myuser -d mydb
+       docker exec -it postgres_container psql -U myuser -d mydb
 
 2. Para ver las tablas disponibles dentro de la base de datos:
        \dt

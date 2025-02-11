@@ -92,7 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.error) {
                 validFields[field] = false;
                 if (field === 'codigo' && !data.unico) {
-                    errorMsg.textContent = "El campo código no se puede repetir 002";
+                    errorMsg.textContent = "El campo código no se puede repetir";
                 } else {
                     errorMsg.textContent = `Error en ${field}`;
                 }

@@ -38,9 +38,9 @@ try {
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($row["count"] > 0) {
-        echo json_encode(["unico" => false, "error" => "Este código ya está registrado"]);
+        echo json_encode(["unico" => false, "error" => "El código ya está registrado"]);
     } else {
-        echo json_encode(["unico" => true]);
+        echo json_encode(["unico" => true, "error" => ""]);    
     }
 } catch (PDOException $e) {
     echo json_encode(["error" => "Error en la consulta: " . $e->getMessage()]);

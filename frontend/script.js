@@ -71,15 +71,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (!reglas[field].test(value)) {
+            updateUI(field, false);
             errorMsg.textContent = `${mensajes[field]}`;
             validFields[field] = false;
-            updateUI(field, false);
             return;
         }
 
         errorMsg.textContent = "Validando...";
         input.classList.remove("valid", "error");
-
         validarBackend(field, value);
     }
 
@@ -91,10 +90,12 @@ document.addEventListener("DOMContentLoaded", () => {
     
             if (data.error) {
                 validFields[field] = false;
-                if (field === 'codigo' && !data.unico) {
-                    errorMsg.textContent = "El campo código no se puede repetir";
+                if (field === 'codigo' && data.unico === false) {
+                    updateUI(field, false);
+                    errorMsg.textContent = "Este código ya está registrado";
+                    
                 } else {
-                    errorMsg.textContent = `Error en ${field}`;
+                    errorMsg.textContent = data.error;
                 }
                 updateUI(field, false);
                 return;
@@ -103,8 +104,9 @@ document.addEventListener("DOMContentLoaded", () => {
             validFields[field] = true;
             errorMsg.textContent = "";
             updateUI(field, true);
+
         } catch (error) {
-            console.error(`Error en validación de ${field}:`, error);
+            errorMsg.textContent = "Error en la validación, intenta nuevamente";
             validFields[field] = false;
             updateUI(field, false);
         }
@@ -265,7 +267,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     .map(checkbox => checkbox.value);
 
                 formData.material = materialesSeleccionados;
-                //console.log("Datos enviados:", formData);
                 
                 const response = await fetch(`${CONFIG.API_BASE_URL}agregar_producto.php`, {
                     method: "POST",

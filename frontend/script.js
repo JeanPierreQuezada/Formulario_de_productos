@@ -50,14 +50,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const errorMsg = document.getElementById(`msg-${field}`);
 
         const reglas = {
-            codigo: /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]+$/,
+            codigo: /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]{5,15}$/,
             nombre: /^[A-Za-zÁÉÍÓÚáéíóúÜüÑñ ]{2,50}$/,
             precio: /^\d+(\.\d{1,2})?$/,
             descripcion: /^.{10,1000}$/
         };
 
         const mensajes = { 
-            codigo: "El código debe contener al menos una letra y un número.",
+            codigo: "El código debe contener entre 5 a 15 caracteres y al menos una letra y un número.",
             nombre: "El nombre debe contener entre 2 y 50 caracteres y solo letras.",
             precio: "El precio debe ser un número válido con hasta dos decimales.",
             descripcion: "La descripción debe tener entre 10 y 1000 caracteres."
@@ -92,7 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.error) {
                 validFields[field] = false;
                 if (field === 'codigo' && !data.unico) {
-                    errorMsg.textContent = "El campo código no se puede repetir";
+                    errorMsg.textContent = "El campo código no se puede repetir 002";
                 } else {
                     errorMsg.textContent = `Error en ${field}`;
                 }
@@ -155,7 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
         fetch(`${CONFIG.API_BASE_URL}get_bodegas.php`)
             .then(response => response.json())
             .then(data => {
-                sucursalSelect.innerHTML = '<option value="">Seleccione una opción</option>';
+                sucursalSelect.innerHTML = '<option value=""></option>';
                 data.bodegas.forEach(bodega => {
                     let option = document.createElement("option");
                     option.value = bodega.id;
@@ -168,7 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     function loadSucursales(bodegaId) {
         if (!bodegaId) {
-            sucursalSelect.innerHTML = '<option value="">Seleccione una opción</option>';
+            sucursalSelect.innerHTML = '<option value=""></option>';
             sucursalSelect.disabled = true;
             return;
         }
@@ -176,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
         fetch(`${CONFIG.API_BASE_URL}get_sucursales.php?bodega_id=${bodegaId}`)
             .then(response => response.json())
             .then(data => {
-                sucursalSelect.innerHTML = '<option value="">Seleccione una opción</option>';
+                sucursalSelect.innerHTML = '<option value=""></option>';
 
                 if (Array.isArray(data.sucursales)) {
                     data.sucursales.forEach(sucursal => {
@@ -192,7 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
             })
             .catch(error => {
                 console.error("Error al obtener sucursales:", error);
-                sucursalSelect.innerHTML = '<option value="">Seleccione...</option>';
+                sucursalSelect.innerHTML = '<option value=""></option>';
                 sucursalSelect.disabled = true;
             });
     }

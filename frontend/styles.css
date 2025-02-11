@@ -113,11 +113,12 @@ button {
     cursor: not-allowed;
 }
 
-/*Estilos de varlidaciones*/
+/*Estilos de validaciones*/
 p{
-    height: 11px;
+    height: 20px;
     font-size: 10px;
     border-width: 0px;
+    margin: 5px 0px 5px 2px;
 }
 
 .error {
@@ -178,7 +179,7 @@ p{
     p{
         font-size: 10px;
         border-width: 0px;
-        margin: 3px 0px 12px 1px;
+        margin: 3px 0px 5px 1px;
     }
 
     .row {
